@@ -35,7 +35,7 @@ st.markdown("""
 
     /* Фон страницы (например, море) */
     .stApp {
-        background-image: url("https://masterpiecer-images.s3.yandex.net/48dcd5e4936211eead3ae6d39d9a42a4:upscaled");
+        background-image: url("https://allwebs.ru/images/2025/12/26/871e99bbff703305321f4398c2398332.png");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -45,7 +45,7 @@ st.markdown("""
     /* Тёмные карточки с белым текстом */
     .css-1v0mbdj, .css-12w0y3b, .stMarkdown, .stTabs, .stDataFrame, 
     .stPlotlyChart, .stImage, .stTable, div[data-testid="stHorizontalBlock"] {
-        background-color: rgba(89, 72, 38, 0.88) !important;
+        background-color: rgba(20, 20, 20, 0.88) !important;
         color: #f1f5f9 !important;
         padding: 1.2rem;
         border-radius: 14px;
@@ -65,7 +65,7 @@ st.markdown("""
     }
     .stTabs [data-baseweb="tab"] {
         height: 45px;
-        background-color: rgba(128, 99, 42, 0.6);
+        background-color: rgba(0, 0, 0, 0.6);
         border-radius: 10px 10px 0 0;
         color: #cbd5e1;
         font-weight: 600;
@@ -73,8 +73,8 @@ st.markdown("""
         border: none;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #80632a;
-        color: #e2e8f0;
+        background-color: rgba(220, 220, 220, 0.85);  /* светло-серый с прозрачностью */
+        color: #1f2937;                                /* тёмный текст для контраста */
     }
 
     /* Графики matplotlib — не выходят за границы */
@@ -232,9 +232,12 @@ with tab2:
     model_dir = 'metrics/YOLO_face'
     if model:
         st.write("🔹 Модель: YOLOv8n")
-        st.write("🔹 Обучена на 16.800 объектов")
+        st.write("🔹 Обучена на 16 800 объектах")
         st.write("🔹 Число эпох обучения: 20")
-        st.write("🔹 PR Curve: 0.88")
+        st.write("🔹 mean Average Precision: 0.88")
+        st.write("🔹 Precision: 0.90")
+        st.write("🔹 Recall: 0.80")
+        st.write("🔹 F1-Score: 0.85")
 
 
 
@@ -267,8 +270,19 @@ with tab2:
                 st.image(os.path.join(model_dir, "confusion_matrix.png"), caption="Матрица ошибок", width=800)
             else:
                 st.warning("Матрица ошибок не найдена")
-
-        
+        with col1:
+            st.subheader("Пример из валидационной выборки, True")
+            if os.path.exists(os.path.join('images/face', "val_batch2_labels.jpg")):
+                st.image(os.path.join('images/face', "val_batch2_labels.jpg"), caption="Пример из валидационной выборки, True", width=800)
+            else:
+                st.warning("Пример из валидационной выборки, True не найдена")      
+        with col1:
+            st.subheader("Пример из валидационной выборки, Predict")
+            if os.path.exists(os.path.join('images/face', "val_batch2_pred.jpg")):
+                st.image(os.path.join('images/face', "val_batch2_pred.jpg"), caption="Пример из валидационной выборки, Predict", width=800)
+            else:
+                st.warning("Пример из валидационной выборки, Predict не найдена")        
+  
 
     else:
         st.error(f"❌ Папка модели не найдена: {model_dir}")
@@ -278,3 +292,5 @@ st.sidebar.title('Навигация 🧭')
 st.sidebar.page_link('app.py', label='Forest Segmentation', icon='🌲')
 st.sidebar.page_link('pages/face.py', label='Detector Face', icon='👁️')
 st.sidebar.page_link('pages/sudno.py', label='Detector Ships', icon='⛴️')
+st.sidebar.page_link('pages/wind.py', label='Detector Wind Turbines', icon='💨')
+

@@ -7,11 +7,10 @@ import requests
 from io import BytesIO
 import pandas as pd
 
-
 # ====== 1. КАСТОМНАЯ ТЕМА ЧЕРЕЗ HTML/CSS ======
 st.markdown("""
-     <style>
-
+    <style>
+            
     /* Скрываем заголовок "Pages" */
     [data-testid="stSidebar"] > div:first-child > div:first-child > h2 {
         display: none;
@@ -27,6 +26,7 @@ st.markdown("""
         display: none;
     }        
     
+            
     /* Основной контейнер — НЕ на весь экран, а с ограничением */
     .block-container {
         max-width: 1300px !important;   /* ← ключевой параметр */
@@ -89,6 +89,7 @@ st.sidebar.title('Навигация 🧭')
 st.sidebar.page_link('app.py', label='Forest Segmentation', icon='🌲')
 st.sidebar.page_link('pages/face.py', label='Detector Face', icon='👁️')
 st.sidebar.page_link('pages/sudno.py', label='Detector Ships', icon='⛴️')
+st.sidebar.page_link('pages/wind.py', label='Detector Wind Turbines', icon='💨')
 
 # ====== 2. ЗАГОЛОВОК ======
 st.title("🚢 Модель для детекции судов на изображениях аэросъёмки")
@@ -101,6 +102,7 @@ tabs = st.tabs([
     "🏆 Итоговая модель",
     "🔍 Детекция судов"
 ])
+
 
 # ======================
 # ВКЛАДКА 1: ДАТАСЕТ
@@ -140,6 +142,7 @@ with tabs[0]:
         else:
             col.warning("Файл не найден")
 
+
 # ======================
 # ВКЛАДКА 2: ПЕРВОЕ ОБУЧЕНИЕ
  #модель, начальные параметры, итог первого обучения: метрики, графики и примеры предсказаний
@@ -174,8 +177,8 @@ with tabs[1]:
 
     # Примеры предсказаний
     st.subheader("🔍 Примеры предсказаний (1–10 эпох)")
-    pred_files = [f"metrics/YOLO_sudno/pred_img{i}.jpg" for i in range(2, 5)]
-    cols = st.columns(3)
+    pred_files = [f"metrics/YOLO_sudno/first_predictions/pred_img{i}.jpg" for i in range(1, 5)]
+    cols = st.columns(4)
     for i, col in enumerate(cols):
         p = Path(pred_files[i])
         if p.exists():
@@ -187,12 +190,6 @@ with tabs[1]:
 # ВКЛАДКА 3: УЛУЧШЕНИЯ
 # ======================
 with tabs[2]:
-    st.subheader("🔧 Стратегии улучшения модели")
-    st.markdown("""
-    - Увеличение числа эпох
-    - Аугментация данных (Mosaic, mixup)
-    - Настройка гиперпараметров (lr0, optimizer)
-    """)
     
     st.subheader("📊 Сравнение метрик")   
 
@@ -212,23 +209,276 @@ with tabs[2]:
     except:
         st.error("Данные не загружены")
 
+    st.subheader("🔧 Стратегии улучшения модели")
+    st.markdown("""
+    - Увеличение числа эпох
+    - Аугментация данных (Mosaic, mixup)
+    - Настройка гиперпараметров (lr0, optimizer)
+    - Обучение с заморозкой слоев
+    """)
+
+    # Стилизация
+    st.markdown("""
+    <style>
+        .metric-row {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 12px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #28a745;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .metric-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            width: 120px;
+        }
+        .metric-values {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        .old-value {
+            color: #6c757d;
+        }
+        .new-value {
+            color: #28a745;
+            font-weight: 700;
+        }
+        .arrow {
+            margin: 0 10px;
+            color: #495057;
+        }
+        .difference {
+            color: #28a745;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Данные
+    metrics = [
+        {"name": "Precision", "old": 0.508, "new": 0.564},
+        {"name": "Recall", "old": 0.385, "new": 0.473},
+        {"name": "mAP50", "old": 0.4, "new": 0.469},
+        {"name": "mAP50-95", "old": 0.226, "new": 0.282}
+    ]
+
+    # Заголовок
+    st.title("📊 Изменение метрик модели")
+    st.markdown("---")
+
+    # Отображение метрик
+    for metric in metrics:
+        difference = metric["new"] - metric["old"]
+        percent_diff = (difference / metric["old"]) * 100
+        
+        st.markdown(f"""
+        <div class="metric-row">
+            <div class="metric-name">{metric['name']}</div>
+            <div class="metric-values">
+                <span class="old-value">{metric['old']:.3f}</span>
+                <span class="arrow">→</span>
+                <span class="new-value">{metric['new']:.3f}</span>
+                <span class="difference">(+{difference:.3f})</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Итог
+    st.markdown("---")
+    st.success("✅ Все метрики показывают положительную динамику")
+
+    
+
 
 # ======================
 # ВКЛАДКА 4: ИТОГОВАЯ МОДЕЛЬ
 # ======================
-# with tabs[3]:
-    # st.subheader("🎖️ Характеристики финальной модели")
-    # st.markdown("""
-    # - **Архитектура**: YOLOv11m (кастомная модификация)
-    # - **Класс**: `ship`
-    # - **Итоговые метрики**:
-    #   - **mAP@0.5**: 0.892
-    #   - **mAP@0.5:0.95**: 0.674
-    #   - **Precision**: 0.915
-    #   - **Recall**: 0.871
-    # - **Веса**: `models/best.pt`
-    # """)
-    # st.image("images/final_metrics.png", caption="Итоговые метрики", use_container_width=True)
+with tabs[3]:
+    st.subheader("Итоговая модель - базовая YOLOv8n на 30 эпохах 🤯")
+
+    # Стилизация
+    st.markdown("""
+    <style>
+        .metric-row {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 12px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .metric-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            width: 120px;
+        }
+        .metric-values {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        .old-value {
+            color: #6c757d;
+        }
+        .new-value {
+            font-weight: 700;
+        }
+        .arrow {
+            margin: 0 10px;
+            color: #495057;
+        }
+        .difference {
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .positive {
+            color: #28a745;
+            border-left: 4px solid #28a745;
+        }
+        .negative {
+            color: #dc3545;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Данные
+    metrics = [
+        {"name": "Precision", "old": 0.566, "new": 0.585},
+        {"name": "Recall", "old": 0.476, "new": 0.453},
+        {"name": "mAP50", "old": 0.471, "new": 0.474},
+        {"name": "mAP50-95", "old": 0.28, "new": 0.281}
+    ]
+
+    # Заголовок
+    st.title("📊 Изменение метрик модели")
+    st.markdown("---")
+    # Информация о моделях
+    st.markdown("""
+    <div class="model-info">
+        <span class="info-icon">ℹ️</span>
+        <strong>Информация о моделях:</strong><br>
+        • <strong>Серое значение</strong>: YOLOv11m с попытками улучшения каждые 10 эпох<br>
+        • <strong>Цветное значение</strong>: Базовая YOLOv8n, обученная на 30 эпохах
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Отображение метрик
+    for metric in metrics:
+        difference = metric["new"] - metric["old"]
+        percent_diff = (difference / metric["old"]) * 100
+        
+        # Определяем тип изменения (положительное/отрицательное)
+        if difference >= 0:
+            row_class = "positive"
+            sign = "+"
+            color_class = "positive"
+        else:
+            row_class = "negative"
+            sign = ""
+            color_class = "negative"
+        
+        st.markdown(f"""
+        <div class="metric-row {row_class}">
+            <div class="metric-name">{metric['name']}</div>
+            <div class="metric-values">
+                <span class="old-value">{metric['old']:.3f}</span>
+                <span class="arrow">→</span>
+                <span class="new-value {color_class}">{metric['new']:.3f}</span>
+                <span class="difference {color_class}">({sign}{difference:.3f})</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Кривые
+    curve_files = {
+        "Матрица ошибок": "metrics/YOLO_sudno/last_confusion_matrix.png"}
+
+    for title, path in curve_files.items():
+        st.markdown(f"### {title}")
+        p = Path(path)
+        if p.exists():
+            st.image(str(p), use_container_width=True)
+        else:
+            st.info(f"График «{title}» недоступен.")
+
+    st.title("🖼️ Сравнение предсказаний моделей")
+
+    # Стили для красивого отображения
+    st.markdown("""
+    <style>
+        .comparison-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+        .image-card {
+            flex: 1;
+            border-radius: 12px;
+            padding: 15px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .image-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: white;
+        }
+        .old-model {
+            border-top: 4px solid #dc3545;
+        }
+        .new-model {
+            border-top: 4px solid #28a745;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Пути к изображениям (замени на свои)
+    old_images = [
+        "metrics/YOLO_sudno/first_predictions/pred_img1.jpg",
+        "metrics/YOLO_sudno/first_predictions/pred_img2.jpg",
+        "metrics/YOLO_sudno/first_predictions/pred_img3.jpg",
+        "metrics/YOLO_sudno/first_predictions/pred_img4.jpg"
+    ]
+
+    new_images = [
+        "metrics/YOLO_sudno/last_predictions/pred_img1.jpg",
+        "metrics/YOLO_sudno/last_predictions/pred_img2.jpg",
+        "metrics/YOLO_sudno/last_predictions/pred_img3.jpg",
+        "metrics/YOLO_sudno/last_predictions/pred_img4.jpg"
+    ]
+
+    # Сравнение изображений попарно
+    for i, (old_img, new_img) in enumerate(zip(old_images, new_images), 1):
+        st.markdown(f"### Пример #{i}")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown('<div class="image-card old-model">', unsafe_allow_html=True)
+            st.markdown('<div class="image-title">YOLOv11m </div>', unsafe_allow_html=True)
+            st.image(old_img, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown('<div class="image-card new-model">', unsafe_allow_html=True)
+            st.markdown('<div class="image-title">YOLOv8n </div>', unsafe_allow_html=True)
+            st.image(new_img, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown("---")  
 
 # ======================
 # ВКЛАДКА 5: ДЕТЕКЦИЯ
@@ -291,4 +541,7 @@ with tabs[4]:
             else:
                 st.info("🧭 Судов не обнаружено.")
             st.divider()
+
+
+
    
