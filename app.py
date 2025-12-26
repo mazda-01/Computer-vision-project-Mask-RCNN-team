@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 
-st.markdown(
-    """
-    <style>
+st.markdown("""
+     <style>
+
     /* Скрываем заголовок "Pages" */
     [data-testid="stSidebar"] > div:first-child > div:first-child > h2 {
         display: none;
@@ -26,11 +26,65 @@ st.markdown(
     /* Если нужно — скрываем разделитель */
     [data-testid="stSidebar"] > div:first-child > hr {
         display: none;
+    }        
+    
+    /* Основной контейнер — НЕ на весь экран, а с ограничением */
+    .block-container {
+        max-width: 1300px !important;   /* ← ключевой параметр */
+        padding: 2rem 2rem !important;
+        margin: 0 auto;                 /* центрируем */
+    }
+
+    /* Фон страницы (например, море) */
+    .stApp {
+        background-image: url("https://balthazar.club/o/uploads/posts/2024-01/1705040959_balthazar-club-p-krasivii-fon-lesa-oboi-46.jpg");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        background-repeat: no;
+    }
+
+    /* Тёмные карточки с белым текстом */
+    .css-1v0mbdj, .css-12w0y3b, .stMarkdown, .stTabs, .stDataFrame, 
+    .stPlotlyChart, .stImage, .stTable, div[data-testid="stHorizontalBlock"] {
+        background-color: rgba(35, 54, 35, 0.88) !important;
+        color: #f1f5f9 !important;
+        padding: 1.2rem;
+        border-radius: 14px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Текст */
+    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, 
+    .stMarkdown p, .stMarkdown li {
+        color: #f1f5f9 !important;
+    }
+
+    /* Вкладки */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 24px;
+        padding: 10px 0;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 45px;
+        background-color: rgba(35, 54, 35, 0.6);
+        border-radius: 10px 10px 0 0;
+        color: #cbd5e1;
+        font-weight: 600;
+        padding: 0 24px;
+        border: none;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #345533;
+        color: #e2e8f0;
+    }
+
+    /* Графики matplotlib — не выходят за границы */
+    .stPlotlyChart, .stPyplot {
+        overflow: hidden;
     }
     </style>
-    """,
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
 # Настройка страницы (тёмная тема по умолчанию — красивее для масок)
 st.set_page_config(page_title="Сегментация леса", layout="centered")
@@ -130,7 +184,7 @@ with tab1:
                 st.markdown("---")  # разделитель между изображениями
 
     # === По URL ===
-    st.header("Или вставьте ссылку на фото")
+    st.header("Вставьте ссылку на фото")
     url = st.text_input("Прямая ссылка:")
 
     if url:
@@ -186,5 +240,5 @@ st.caption("Демонстрация модели сегментации лес�
 st.sidebar.title('Навигация 🧭')
 st.sidebar.page_link('app.py', label='Forest Segmentation', icon='🌲')
 st.sidebar.page_link('pages/face.py', label='Detector Face', icon='👁️')
-# st.sidebar.page_link('pages/update.py', label='Загрузка и обработка', icon='🗄️')
+st.sidebar.page_link('pages/sudno.py', label='Detector Ships', icon='⛴️')
 # st.sidebar.page_link('pages/analysis.py', label='Анализ', icon='📊')

@@ -8,9 +8,9 @@ from io import BytesIO
 import time
 import os
 
-st.markdown(
-    """
-    <style>
+st.markdown("""
+     <style>
+
     /* Скрываем заголовок "Pages" */
     [data-testid="stSidebar"] > div:first-child > div:first-child > h2 {
         display: none;
@@ -24,11 +24,65 @@ st.markdown(
     /* Если нужно — скрываем разделитель */
     [data-testid="stSidebar"] > div:first-child > hr {
         display: none;
+    }        
+    
+    /* Основной контейнер — НЕ на весь экран, а с ограничением */
+    .block-container {
+        max-width: 1300px !important;   /* ← ключевой параметр */
+        padding: 2rem 2rem !important;
+        margin: 0 auto;                 /* центрируем */
+    }
+
+    /* Фон страницы (например, море) */
+    .stApp {
+        background-image: url("https://masterpiecer-images.s3.yandex.net/48dcd5e4936211eead3ae6d39d9a42a4:upscaled");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        background-repeat: no;
+    }
+
+    /* Тёмные карточки с белым текстом */
+    .css-1v0mbdj, .css-12w0y3b, .stMarkdown, .stTabs, .stDataFrame, 
+    .stPlotlyChart, .stImage, .stTable, div[data-testid="stHorizontalBlock"] {
+        background-color: rgba(89, 72, 38, 0.88) !important;
+        color: #f1f5f9 !important;
+        padding: 1.2rem;
+        border-radius: 14px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Текст */
+    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, 
+    .stMarkdown p, .stMarkdown li {
+        color: #f1f5f9 !important;
+    }
+
+    /* Вкладки */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 24px;
+        padding: 10px 0;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 45px;
+        background-color: rgba(128, 99, 42, 0.6);
+        border-radius: 10px 10px 0 0;
+        color: #cbd5e1;
+        font-weight: 600;
+        padding: 0 24px;
+        border: none;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #80632a;
+        color: #e2e8f0;
+    }
+
+    /* Графики matplotlib — не выходят за границы */
+    .stPlotlyChart, .stPyplot {
+        overflow: hidden;
     }
     </style>
-    """,
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
 # ----------------------------
 # ЗАГРУЗКА МОДЕЛИ
@@ -91,7 +145,6 @@ with tab1:
     # ----------------------------
     # БЛОК ЗАГРУЗКИ ИЗОБРАЖЕНИЙ
     # ----------------------------
-    st.markdown("---")
     st.header("🖼️ Загрузите изображения")
 
     input_type = st.radio("Способ загрузки", ["Файл", "URL", "Веб-камера"], key="blur_input")
@@ -224,3 +277,4 @@ with tab2:
 st.sidebar.title('Навигация 🧭')
 st.sidebar.page_link('app.py', label='Forest Segmentation', icon='🌲')
 st.sidebar.page_link('pages/face.py', label='Detector Face', icon='👁️')
+st.sidebar.page_link('pages/sudno.py', label='Detector Ships', icon='⛴️')
