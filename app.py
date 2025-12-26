@@ -9,10 +9,10 @@ import segmentation_models_pytorch as smp
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
+import time  # ← добавлен для замера времени
 
 st.markdown("""
      <style>
-
     /* Скрываем заголовок "Pages" */
     [data-testid="stSidebar"] > div:first-child > div:first-child > h2 {
         display: none;
@@ -30,18 +30,18 @@ st.markdown("""
     
     /* Основной контейнер — НЕ на весь экран, а с ограничением */
     .block-container {
-        max-width: 1300px !important;   /* ← ключевой параметр */
+        max-width: 1300px !important;
         padding: 2rem 2rem !important;
-        margin: 0 auto;                 /* центрируем */
+        margin: 0 auto;
     }
 
-    /* Фон страницы (например, море) */
+    /* Фон страницы */
     .stApp {
         background-image: url("https://balthazar.club/o/uploads/posts/2024-01/1705040959_balthazar-club-p-krasivii-fon-lesa-oboi-46.jpg");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-        background-repeat: no;
+        background-repeat: no-repeat;
     }
 
     /* Тёмные карточки с белым текстом */
@@ -79,17 +79,15 @@ st.markdown("""
         color: #e2e8f0;
     }
 
-    /* Графики matplotlib — не выходят за границы */
+    /* Графики */
     .stPlotlyChart, .stPyplot {
         overflow: hidden;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Настройка страницы (тёмная тема по умолчанию — красивее для масок)
 st.set_page_config(page_title="Сегментация леса", layout="centered")
 
-# Вкладки
 tab1, tab2 = st.tabs(["🌲 Сегментация", "📊 Информация о модели"])
 
 with tab1:
@@ -128,26 +126,19 @@ with tab1:
 
     def segment_image(image_pil):
         if model is None:
-            return None, 0.0, 0.0
-    
+            return None, 0.0
+
         img_tensor = transform(image_pil).unsqueeze(0).to(device)
         with torch.no_grad():
             output = model(img_tensor)
             probs = torch.sigmoid(output)[0, 0].cpu().numpy()
 
-
         orig_w, orig_h = image_pil.size
+        threshold = 0.6 if (orig_w > 800 and orig_h > 800) else 0.3
 
-        # Выбираем порог в зависимости от размера
-        if orig_w > 800 and orig_h > 800:
-            threshold = 0.6
-        else:
-            threshold = 0.3
-        
         mask = (probs > threshold).astype(np.uint8) * 255
         forest_percent = (probs > threshold).mean() * 100
-        confidence = probs.mean() * 100
-        return mask, forest_percent, confidence
+        return mask, forest_percent
 
     # === Загрузка файлов ===
     st.header("Загрузите изображения")
@@ -160,28 +151,24 @@ with tab1:
     if uploaded_files:
         for uploaded_file in uploaded_files:
             image = Image.open(uploaded_file).convert("RGB")
-
-            # Оригинал
             st.image(image, caption=f"Оригинал: {uploaded_file.name}", width=700)
 
-            # Сегментация ниже
-            mask, forest_percent, confidence = segment_image(image)
+            start_time = time.time()
+            mask, forest_percent = segment_image(image)
+            pred_time = time.time() - start_time
 
             if mask is not None:
-                # Настройка matplotlib — убираем белый фон и оси
                 plt.figure(figsize=(10, 10))
                 plt.imshow(image)
                 plt.imshow(mask, cmap="Greens", alpha=0.6)
                 plt.axis('off')
                 plt.margins(0, 0)
                 plt.tight_layout(pad=0)
-
-                st.pyplot(plt, use_container_width=True)  # без белого окна
+                st.pyplot(plt, use_container_width=True)
 
                 st.success("**Результат:**")
                 st.write(f"🌲 Лес занимает **{forest_percent:.1f}%** площади")
-                st.write(f"📊 Уверенность модели: **{confidence:.1f}%**")
-                st.markdown("---")  # разделитель между изображениями
+                st.write(f"⏱️ Время предсказания: **{pred_time:.2f} сек**")
 
     # === По URL ===
     st.header("Вставьте ссылку на фото")
@@ -192,10 +179,11 @@ with tab1:
             response = requests.get(url, timeout=15)
             response.raise_for_status()
             image = Image.open(BytesIO(response.content)).convert("RGB")
-
             st.image(image, caption="Оригинал по ссылке", width=700)
 
-            mask, forest_percent, confidence = segment_image(image)
+            start_time = time.time()
+            mask, forest_percent = segment_image(image)
+            pred_time = time.time() - start_time
 
             plt.figure(figsize=(10, 10))
             plt.imshow(image)
@@ -203,12 +191,11 @@ with tab1:
             plt.axis('off')
             plt.margins(0, 0)
             plt.tight_layout(pad=0)
-
             st.pyplot(plt, use_container_width=True)
 
             st.success("**Результат:**")
             st.write(f"🌲 Лес занимает **{forest_percent:.1f}%** площади")
-            st.write(f"📊 Уверенность модели: **{confidence:.1f}%**")
+            st.write(f"⏱️ Время предсказания: **{pred_time:.2f} сек**")
 
         except Exception as e:
             st.error(f"Ошибка загрузки: {e}")
@@ -241,4 +228,3 @@ st.sidebar.title('Навигация 🧭')
 st.sidebar.page_link('app.py', label='Forest Segmentation', icon='🌲')
 st.sidebar.page_link('pages/face.py', label='Detector Face', icon='👁️')
 st.sidebar.page_link('pages/sudno.py', label='Detector Ships', icon='⛴️')
-# st.sidebar.page_link('pages/analysis.py', label='Анализ', icon='📊')
